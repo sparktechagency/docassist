@@ -79,23 +79,17 @@ class CheckoutController extends Controller
             'answers.*.question_id' => 'nullable',
             'answers.*.value' => 'nullable',
 
-            'required_docs' => 'required|array',
-            'required_docs.*' => 'required|array',
-            'required_docs.*.*' => 'required|image|mimes:jpg,jpeg,png|max:5120',
+            'required_docs' => 'nullable|array',
+            'required_docs.*' => 'nullable|array',
+            'required_docs.*.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
-
-//        Log::warning('This is log'.$request->all());
-//        return $request->all();
-//        dd($request->all());
 
 
         $user = Auth::user();
         $paymentIntent = PaymentIntent::retrieve($request->payment_intent_id);
 
+        DB::beginTransaction();
         try {
-            return DB::transaction(function () use ($request, $user, $paymentIntent) {
-
-                // 2 Create Order
                 $order = Order::create([
                     'user_id' => $user->id,
                     'orderid' => Order::generateOrderId(),
@@ -107,9 +101,7 @@ class CheckoutController extends Controller
                     'status' => 'pending',
                 ]);
 
-//                dd($order);
-
-                $orderItemsByService = [];
+//                $orderItemsByService = [];
 
 
 
@@ -125,7 +117,7 @@ class CheckoutController extends Controller
                     ]);
 
 //                    dd($orderItemsByService);
-                    $orderItemsByService[$service->id] = $orderItem;
+//                    $orderItemsByService[$service->id] = $orderItem;
 
 //                    dd($request->answers);
                     // Answers for THIS item
@@ -133,32 +125,23 @@ class CheckoutController extends Controller
 //                        dd($request->answers);
                         foreach ($request->answers as $index => $answer) {
 
-                            $storedValue = $answer['value'] ?? null;
+//                            $storedValue = $answer['value'] ?? null;
 
-//                            $fileKey = "answers.{$index}.value";
-//                            if ($request->hasFile($fileKey)) {
-//                                $storedValue = $this->uploadFile(
-//                                    $request->file($fileKey),
-//                                    'documents/orders/answers/'
-//                                );
-//
-////                                dd('jhdf');
-//                            }
 
                           $answer =  Answers::create([
                                 'user_id' => $user->id,
                                 'order_id' => $order->id,
                                 'order_item_id' => $orderItem->id,
                                 'questionary_id' => $answer['question_id'],
-                                'value' => $storedValue,
+                                'value' => $answer['value'] ?? null,
                             ]);
 
 //                          dd($answer);
-                          Log::info('This is log'.$answer);
+//                          Log::info('This is log'.$answer);
                         }
                     }
 
-                    // 🆕 Handle Required Documents
+                    if (!empty($request->required_docs)) {
                         $requiredDocs = $service->requiredDocuments;
 
                         foreach ($requiredDocs as $requiredDoc) {
@@ -172,7 +155,7 @@ class CheckoutController extends Controller
                                         'documents/orders/required/'
                                     );
 //                                    dd($storedPath);
-                                  $testAnser =  Answers::create([
+                                    $testAnser = Answers::create([
                                         'user_id' => $user->id,
                                         'order_id' => $order->id,
                                         'order_item_id' => $orderItem->id,
@@ -187,9 +170,10 @@ class CheckoutController extends Controller
                                 }
                             }
                         }
+                    }
 //                }
 
-                // 4️⃣ Transaction record
+
                 Transaction::create([
                     'user_id' => $user->id,
                     'order_id' => $order->id,
@@ -198,9 +182,6 @@ class CheckoutController extends Controller
                     'status' => 'initiated',
                 ]);
 
-                // 5️⃣ Notify admins ans user
-
-                // Notify the user who placed the order
                 $user = Auth::user();
                 Notification::send($user, new NewOrderPlaced($order));
 
@@ -209,17 +190,18 @@ class CheckoutController extends Controller
                 if ($admins->isNotEmpty()) {
                     Notification::send($admins, new NewOrderPlaced($order));
                 }
+
+                DB::commit();
                 return response()->json([
                     'status' => true,
                     'message' => 'Order placed successfully',
                     'data' => [
                         'order' => $order,
-                        'orderItemsByService' => $uploadedImages,
                     ],
                 ], 201);
-            });
 
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('Order Error: '.$e->getMessage());
 
             return response()->json([

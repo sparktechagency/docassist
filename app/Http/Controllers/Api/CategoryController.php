@@ -28,7 +28,7 @@ class CategoryController extends Controller
         }
 
         // processing image to upload
-        if ($request->hasFile('image')) 
+        if ($request->hasFile('image'))
         {
             $imageName = time().'.'.$request->image->getClientOriginalExtension();
             $request->image->move(public_path('images/category'), $imageName);
@@ -45,7 +45,7 @@ class CategoryController extends Controller
             'status' => true,
             'message' => 'Category created successfully',
         ]);
-      
+
     }
 
     public function editCategory(Request $request, Category $category)
@@ -62,7 +62,7 @@ class CategoryController extends Controller
         }
 
         // processing image to upload
-        if ($request->hasFile('image')) 
+        if ($request->hasFile('image'))
         {
             if ($category->image && File::exists(public_path($category->image))) {
                 File::delete(public_path($category->image));
@@ -112,10 +112,10 @@ class CategoryController extends Controller
         $query = Category::query()->withCount('services');
 
          // Search functionality
-    
+
         if ($request->filled('search')) {
             $searchTerm = $request->search;
-            // Using 'like' allows for partial matches (e.g. searching "839" finds "839201")
+
             $query->where('name', 'like', "%{$searchTerm}%");
         }
 

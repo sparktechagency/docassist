@@ -54,7 +54,7 @@ class PagesController extends Controller
         // 2. If found -> Updates 'value'.
         // 3. If NOT found -> Creates new row with 'key' and 'value'.
         $page = Pages::updateOrCreate(
-            ['key' => $request->key], 
+            ['key' => $request->key],
             ['value' => $request->value]
         );
 
@@ -107,8 +107,8 @@ class PagesController extends Controller
         }
 
         $request->validate([
-            'question' => 'required|string',
-            'answer' => 'required|string',
+            'question' => 'nullable|string',
+            'answer' => 'nullable|string',
         ]);
 
         $faq->update([

@@ -141,9 +141,9 @@ class QuoteController extends Controller
             'answers.*.question_id' => 'nullable|exists:questionaries,id',
             'answers.*.value' => 'nullable',
 
-            'required_docs' => 'required|array',
-            'required_docs.*' => 'required|array',
-            'required_docs.*.*' => 'required|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
+            'required_docs' => 'nullable|array',
+            'required_docs.*' => 'nullable|array',
+            'required_docs.*.*' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
 
         try {
