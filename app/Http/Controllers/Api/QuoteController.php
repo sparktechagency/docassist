@@ -431,24 +431,62 @@ class QuoteController extends Controller
         }
     }
 
+//    public function deleteQuote(Quote $quote)
+//    {
+//        try {
+//            $quote = Quote::findOrFail($quote->id);
+//
+//            if ($quote->type === 'custom') {
+//                CustomQuote::where('quote_id', $quote->id)->delete();
+//            }
+//            $quote->delete();
+//
+//            if ($quote->type === 'service') {
+//                $serviceQuote = ServiceQuote::where('quote_id', $quote->id)->first();
+//                if ($serviceQuote) {
+//                    Answers::where('service_quote_id', $serviceQuote->id)->delete();
+//                    $serviceQuote->delete();
+//                }
+//                $serviceQuote->delete();
+//            }
+//            $quote->delete();
+//
+//            return response()->json([
+//                'status' => true,
+//                'message' => 'Quote deleted successfully',
+//            ], 200);
+//
+//        } catch (\Exception $e) {
+//            return response()->json([
+//                'status' => false,
+//                'message' => 'Failed to delete quote',
+//                'error' => $e->getMessage(),
+//            ], 500);
+//        }
+//    }
+
     public function deleteQuote(Quote $quote)
     {
         try {
+            // Ensure quote exists
             $quote = Quote::findOrFail($quote->id);
 
+            // Delete related records based on type
             if ($quote->type === 'custom') {
                 CustomQuote::where('quote_id', $quote->id)->delete();
             }
-            $quote->delete();
 
             if ($quote->type === 'service') {
                 $serviceQuote = ServiceQuote::where('quote_id', $quote->id)->first();
                 if ($serviceQuote) {
+                    // Delete answers first
                     Answers::where('service_quote_id', $serviceQuote->id)->delete();
+                    // Then delete the service quote
                     $serviceQuote->delete();
                 }
-                $serviceQuote->delete();
             }
+
+            // Finally delete the parent quote
             $quote->delete();
 
             return response()->json([
@@ -464,6 +502,7 @@ class QuoteController extends Controller
             ], 500);
         }
     }
+
 
     public function quoteDetails(Quote $quote)
     {

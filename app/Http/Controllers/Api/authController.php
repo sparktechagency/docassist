@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{Hash, Validator};
+use Illuminate\Support\Facades\{Auth, Hash, Validator};
 use App\Models\User;
 use App\Http\Controllers\Controller;
 use App\Services\EmailVerificationService;
 use App\Notifications\{EmailVerificationRequest, PasswordResetRequested};
 use Carbon\Carbon;
+use Exception;
+use Laravel\Socialite\Socialite;
 
 class authController extends Controller
 {
@@ -26,8 +28,8 @@ class authController extends Controller
             'password'=>'required|confirmed',
             'password_confirmation'=>'required'
         ]);
-        
-        
+
+
         $user = new User();
         $user->name = $data['name'];
         $user->email = $data['email'];
@@ -35,15 +37,15 @@ class authController extends Controller
         $user->role = "user";
         $user->created_at = Carbon::now();
         $user->save();
-        
+
         $this->emailVerificationService->sendVerificationCode($user);
-        
+
 
         $token = $user->createToken("auth_token")->plainTextToken;
-       
+
         return response()->json([
             'status' => true,
-            'message' => 'User created successfully. Please check your email for verification code.', 
+            'message' => 'User created successfully. Please check your email for verification code.',
             'data' => $data,
             'token' => $token,
             'token_type' => 'Bearer',
@@ -60,14 +62,14 @@ class authController extends Controller
         $user = User::where('email', $data['email'])->first();
 
         if (!$user || !Hash::check($data['password'], $user->password)) {
-          
+
             return response()->json([
                 'message' => 'The provided credentials are incorrect.',
             ], 401);
         }
 
         if ($user->role =='user') {
-            // Check if email is verified 
+            // Check if email is verified
             if ($user->email_verified_at === null) {
                 return response()->json([
                     'message' => 'Please verify your email before logging in.',
@@ -95,7 +97,7 @@ class authController extends Controller
             $user->ban_reason = null;
             $user->save();
         }
-        
+
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -145,10 +147,10 @@ class authController extends Controller
             'access_token' => $token,
             'token_type' => 'Bearer',
         ], 200);
-        
+
         return ['success' => true, 'message' => 'Email verified successfully'];
     }
- 
+
 
     public function sendResetOTP(Request $request)
     {
@@ -165,15 +167,15 @@ class authController extends Controller
         }
 
         $user = User::where('email', $request->email)->first();
-        
+
         // CHANGED: Generate 6-character token (Alphanumeric: a-z, A-Z, 0-9)
         // If you want ONLY uppercase and numbers (cleaner for users), use: strtoupper(Str::random(6))
         // $resetToken = Str::random(6);
         $resetToken = rand(100000, 999999);
-        
+
         // Set expiration time (60 minutes from now)
         $expiresAt = Carbon::now()->addMinutes(10);
-        
+
         // Save reset token and expiration time
         $user->update([
             'reset_token' => Hash::make($resetToken),
@@ -190,7 +192,7 @@ class authController extends Controller
         ], 200);
     }
 
-    
+
 
     public function verifyOtp(Request $request)
     {
@@ -246,7 +248,7 @@ class authController extends Controller
         if ($validator->fails()) {
             return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
         }
-        
+
         $user = User::where('email', $request->email)->first();
 
         // 2. Security Check: Does the Old Password match?
@@ -261,7 +263,7 @@ class authController extends Controller
         $user->update([
             'password' => Hash::make($request->password),
             // Optional: You might want to revoke existing tokens if you are using API tokens
-            // $user->tokens()->delete(); 
+            // $user->tokens()->delete();
         ]);
 
         return response()->json([
@@ -334,7 +336,7 @@ class authController extends Controller
         }
 
         $user = User::where('email', $request->email)->first();
-        
+
         // Check if user is already verified
         if ($user->email_verified_at !== null) {
             return response()->json([
@@ -345,10 +347,10 @@ class authController extends Controller
 
         // Generate 6-digit verification code
         $verificationCode = rand(100000, 999999);
-        
+
         // Set expiration time (30 minutes from now)
         $expiresAt = Carbon::now()->addMinutes(30);
-        
+
         // Save verification code and expiration time
         $user->update([
             'verification_code' => Hash::make($verificationCode),
@@ -367,7 +369,7 @@ class authController extends Controller
     /**
      * Verify the email with the provided code
      */
-    
+
 
     //resending verification code
     public function resendVerificationCode(Request $request)
@@ -393,5 +395,47 @@ class authController extends Controller
         ], 200);
     }
 
-   
+    public function redirectGoogle(Request $request){
+        return Socialite::driver('google')->redirect();
+    }
+
+    public function social_login(Request $request){
+        try{
+            $googleUser = Socialite::driver('google')->user();
+
+            $user = User::where('google_id',$googleUser->getId())->where('email',$googleUser->getEmail())->first();
+
+            if(!$user){
+                $user = User::updateOrCreate(
+                    ['email'=> $googleUser->email ],
+                [
+                    'name'=>$googleUser->name,
+                    'google_id' => $googleUser->id,
+                    'profile_pic'=>$googleUser->avatar,
+                    'password'=>Hash::make('12345678')
+                ]);
+            }
+
+            if ($user && $user->google_id && $user->google_id !== $googleUser->getId()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'This email is already linked with another Google account'
+                ], 403);
+            }
+
+            Auth::login($user);
+
+            return response()->json([
+                'status'=> true,
+                'message'=>'Login Successfull',
+                'data'=>$user,
+            ],200);
+        }catch(Exception $e){
+            return response()->json([
+                'status'=>false,
+                'message'=>'Something went wrong',
+                'error'=>$e->getMessage()
+            ],500);
+        }
+    }
 }

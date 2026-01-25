@@ -23,6 +23,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'google_id',
         'phone_number',
         'address',
         'profile_pic',
@@ -40,7 +41,7 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'reset_token_expires_at' => 'datetime', 
+        'reset_token_expires_at' => 'datetime',
         'banned_until' => 'datetime',
     ];
 

@@ -12,6 +12,9 @@ Route::group(['controller' => authController::class], function () {
     Route::post('/register', 'userRegister');
     Route::post('/login', 'login');
 
+    // Route::get('google/login','redirectGoogle');
+    // Route::get('auth/google/callback','social_login');
+
     // Email Verification Routes
     Route::post('/email/send-verification-code', 'sendVerificationCode');
     Route::post('/email/verify', 'verifyRegistration');

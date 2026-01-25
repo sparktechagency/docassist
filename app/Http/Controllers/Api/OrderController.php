@@ -118,11 +118,11 @@ class OrderController extends Controller
 
             // 4. Order & Pagination
             $perPage = $request->query('per_page', 10);
-            
+
             $orders = $query->orderBy('created_at', 'desc')
                 ->paginate($perPage);
 
-           
+
             return response()->json([
                 'status' => true,
                 'message' => 'Orders fetched successfully',
@@ -149,7 +149,7 @@ class OrderController extends Controller
 
             // Allow lookup by numeric id or public orderid
             $order = Order::with([
-                'user',
+                'user:id,name,email,profile_pic',
                 'items.service',
                 'items.service.category',
                 'items.service.requiredDocuments',
@@ -201,7 +201,7 @@ class OrderController extends Controller
                             return [
                                 'id' => $answer->id,
                                 'question_id' => $answer->questionary_id,
-                                'question_title' => $answer->questionary?->question ?? 'N/A',
+                                'question_title' => $answer->questionary?->name ?? 'N/A',
                                 'value' => $answer->value,
                             ];
                         });
@@ -234,7 +234,7 @@ class OrderController extends Controller
                                 'questionaries' => $item->service->questionaries->map(function ($q) {
                                     return [
                                         'id' => $q->id,
-                                        'question' => $q->question,
+                                        'question' => $q->name,
                                         'type' => $q->type,
                                     ];
                                 }),
@@ -293,7 +293,7 @@ class OrderController extends Controller
         }
     }
 
-    
+
 
 
     public function transactionsHistory(Request $request)
@@ -304,7 +304,7 @@ class OrderController extends Controller
             $perPage = $request->query('per_page', 10);
 
             $transactions = Transaction::with('order.items.service')->where('user_id',Auth::user()->id)->latest('id')->paginate($perPage);
-    
+
             return response()->json([
                 'status' => true,
                 'message' => 'Transaction history fetched successfully',

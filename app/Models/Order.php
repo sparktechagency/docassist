@@ -52,9 +52,9 @@ class Order extends Model
     /**
      * Transactions linked to this order.
      */
-    public function transactions(): HasMany
+    public function transactions()
     {
-        return $this->hasMany(Transaction::class);
+        return $this->hasOne(Transaction::class,'order_id','id')->latestOfMany();
     }
 
     public static function generateOrderId()

@@ -63,7 +63,7 @@ class CheckoutController extends Controller
      */
     public function paymentSuccess(Request $request)
     {
-
+//        dd($request->all());
         // 1 Validate
         $request->validate([
             'amount' => 'required',
@@ -79,21 +79,14 @@ class CheckoutController extends Controller
             'answers.*.question_id' => 'nullable',
             'answers.*.value' => 'nullable',
 
-            'required_docs' => 'nullable|array',
-            'required_docs.*' => 'nullable|array',
-            'required_docs.*.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
-
-//            'items' => 'required|array|min:1',
-//            'items.*.service_id' => 'required|exists:services,id',
-//            'items.*.quantity' => 'required|integer|min:1',
-//
-//            'items.*.answers' => 'nullable|array',
-//            'items.*.answers.*.question_id' => 'nullable',
-//            'items.*.answers.*.value' => 'nullable',
-//
-//            'items.*.required_docs' => 'nullable|array',
-//            'items.*.required_docs.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
+            'required_docs' => 'required|array',
+            'required_docs.*' => 'required|array',
+            'required_docs.*.*' => 'required|image|mimes:jpg,jpeg,png|max:5120',
         ]);
+
+//        Log::warning('This is log'.$request->all());
+//        return $request->all();
+//        dd($request->all());
 
 
         $user = Auth::user();
@@ -114,9 +107,12 @@ class CheckoutController extends Controller
                     'status' => 'pending',
                 ]);
 
+//                dd($order);
+
                 $orderItemsByService = [];
 
-                // 3️⃣ Items + Answers
+
+
 //                foreach ($request->items as $itemIndex => $itemData) {
                     $service = Service::findOrFail($request->service_id);
 
@@ -128,29 +124,37 @@ class CheckoutController extends Controller
                         'subtotal' => $service->price * $request->quantity,
                     ]);
 
+//                    dd($orderItemsByService);
                     $orderItemsByService[$service->id] = $orderItem;
 
+//                    dd($request->answers);
                     // Answers for THIS item
                     if (!empty($request->answers)) {
+//                        dd($request->answers);
                         foreach ($request->answers as $index => $answer) {
 
                             $storedValue = $answer['value'] ?? null;
 
-                            $fileKey = "answers.{$index}.value";
-                            if ($request->hasFile($fileKey)) {
-                                $storedValue = $this->uploadFile(
-                                    $request->file($fileKey),
-                                    'documents/orders/answers/'
-                                );
-                            }
+//                            $fileKey = "answers.{$index}.value";
+//                            if ($request->hasFile($fileKey)) {
+//                                $storedValue = $this->uploadFile(
+//                                    $request->file($fileKey),
+//                                    'documents/orders/answers/'
+//                                );
+//
+////                                dd('jhdf');
+//                            }
 
-                            Answers::create([
+                          $answer =  Answers::create([
                                 'user_id' => $user->id,
                                 'order_id' => $order->id,
                                 'order_item_id' => $orderItem->id,
                                 'questionary_id' => $answer['question_id'],
                                 'value' => $storedValue,
                             ]);
+
+//                          dd($answer);
+                          Log::info('This is log'.$answer);
                         }
                     }
 
@@ -167,14 +171,19 @@ class CheckoutController extends Controller
                                         $file,
                                         'documents/orders/required/'
                                     );
-
-                                    Answers::create([
+//                                    dd($storedPath);
+                                  $testAnser =  Answers::create([
                                         'user_id' => $user->id,
                                         'order_id' => $order->id,
                                         'order_item_id' => $orderItem->id,
                                         'docs_id' => $requiredDoc->id,
                                         'value' => $storedPath,
                                     ]);
+
+                                    $uploadedImages[] = asset($storedPath);
+//                                  dd($testAnser);
+//                                  Log::info('This is log'.$testAnser);
+//                                  dump($testAnser);
                                 }
                             }
                         }
@@ -205,6 +214,7 @@ class CheckoutController extends Controller
                     'message' => 'Order placed successfully',
                     'data' => [
                         'order' => $order,
+                        'orderItemsByService' => $uploadedImages,
                     ],
                 ], 201);
             });
