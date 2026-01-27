@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('services', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete('cascade');
+            $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
             $table->string('title');
             $table->enum('order_type', ['quote','checkout','null'])->default('null')->nullable();
             $table->integer('price')->unsigned()->nullable();

@@ -21,6 +21,6 @@ class Transaction extends Model
 
     public function order()
     {
-        return $this->hasOne(Order::class,'order_id','id');
+        return $this->belongsTo(Order::class,'order_id','id');
     }
 }

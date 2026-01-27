@@ -68,7 +68,7 @@ class CheckoutController extends Controller
         $request->validate([
             'amount' => 'required',
             'payment_intent_id' => 'nullable|string',
-            'is_south_africa' => 'required|boolean',
+            'is_south_africa' => 'nullable|boolean',
             'delivery_id' => 'required|exists:deliveries,id',
 
 //            'items' => 'required|array|min:1',

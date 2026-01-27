@@ -16,7 +16,7 @@ class ServiceController extends Controller
     {
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
-            'is_south_african' => 'required|boolean',
+            'is_south_african' => 'nullable|boolean',
             'title' => 'required|string|max:255',
             'subtitle' => 'nullable|string|max:255',
             'order_type' => 'nullable|in:quote,checkout,null',
@@ -42,7 +42,7 @@ class ServiceController extends Controller
 
             $service = Service::create([
                 'category_id' => $validated['category_id'],
-                'is_south_african' => $validated['is_south_african'],
+                'is_south_african' => $validated['is_south_african'] ?? null,
                 'title' => $validated['title'],
                 'subtitle' => $validated['subtitle'] ?? null,
                 'order_type' => $validated['order_type'] ?? 'null',
@@ -85,7 +85,7 @@ class ServiceController extends Controller
 //        dd($request->all());
         $validated = $request->validate([
             'category_id' => 'sometimes|exists:categories,id',
-            'is_south_african' => 'sometimes|boolean',
+            'is_south_african' => 'nullable',
             'title' => 'sometimes|string|max:255',
             'subtitle' => 'nullable|string|max:255',
             'order_type' => 'nullable|in:quote,checkout,null',
@@ -864,12 +864,18 @@ class ServiceController extends Controller
     public function serviceList(Request $request)
     {
         $query = Service::query();
-        if ($request->has('is_south_african')) {
-            $isSouthAfrican = $request->boolean('is_south_african');
-            $query->where('is_south_african', $isSouthAfrican ? 1 : 0);
+        if ($request->filled('is_south_african')) {
+            $query->where(function($q) use ($request) {
+                if ($request->is_south_african === 'null') {
+                    $q->whereNull('is_south_african');
+                } else {
+                    $q->where('is_south_african', $request->boolean('is_south_african'));
+                }
+            });
         }
 
-         // Search functionality
+
+        // Search functionality
 
         if($request->filled('category_id')) {
             $categoryId = $request->category_id;

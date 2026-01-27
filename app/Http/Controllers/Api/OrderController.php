@@ -303,7 +303,7 @@ class OrderController extends Controller
 
             $perPage = $request->query('per_page', 10);
 
-            $transactions = Transaction::with('order.items.service')->where('user_id',Auth::user()->id)->latest('id')->paginate($perPage);
+            $transactions = Transaction::with('order.items.service')->where('user_id',Auth::id())->latest()->paginate($perPage);
 
             return response()->json([
                 'status' => true,
