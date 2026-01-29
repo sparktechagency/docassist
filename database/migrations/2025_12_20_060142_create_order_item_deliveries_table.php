@@ -13,8 +13,12 @@ return new class extends Migration
     {
         Schema::create('order_item_deliveries', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('order_item_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('delivery_detail_id')->constrained('delivery_details')->cascadeOnDelete();
+            $table->unsignedBigInteger('order_item_id')->nullable();
+            $table->foreign('order_item_id')->on('order_items')->references('id')->onDelete('cascade');
+//            $table->foreignId('order_item_id')->constrained()->cascadeOnDelete();
+            $table->unsignedBigInteger('delivery_detail_id')->nullable();
+            $table->foreign('delivery_detail_id')->on('delivery_details')->references('id')->onDelete('cascade');
+//            $table->foreignId('delivery_detail_id')->constrained('delivery_details')->cascadeOnDelete();
             $table->timestamps();
         });
     }

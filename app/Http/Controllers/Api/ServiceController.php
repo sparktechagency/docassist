@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{DB, File};
+use Illuminate\Support\Facades\{DB, File, Validator};
 use App\Models\Service;
 use App\Http\Controllers\Controller;
 
@@ -14,9 +14,9 @@ class ServiceController extends Controller
      */
     public function createBaseService(Request $request)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'category_id' => 'required|exists:categories,id',
-            'is_south_african' => 'nullable|boolean',
+            'is_south_african' => 'required|string|in:yes,no',
             'title' => 'required|string|max:255',
             'subtitle' => 'nullable|string|max:255',
             'order_type' => 'nullable|in:quote,checkout,null',
@@ -29,33 +29,45 @@ class ServiceController extends Controller
             'how_it_works.*' => 'nullable|string|max:255',
         ]);
 
+
         try {
-            $imageName = null;
-            if (!File::exists('images/service')) {
-                File::makeDirectory('images/service', 0777, true, true);
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Failed to create service.',
+                    'error' => $validator->errors()->first(),
+                ], 500);
             }
+//            $data = $validator->validated();
+//            return $data;
+            $imageName = null;
+//            if (!File::exists('images/service')) {
+//                File::makeDirectory('images/service', 0777, true, true);
+//            }
 
             if ($request->hasFile('image')) {
-                $imageName = time() . '.' . $request->image->getClientOriginalExtension();
-                $request->image->move(public_path('images/service'), $imageName);
+//                $imageName = time() . '.' . $request->image->getClientOriginalExtension();
+//                $request->image->move(public_path('images/service'), $imageName);
+
+                $imageName = $this->uploadFile($request->file('image'),'images/service/');
             }
 
             $service = Service::create([
-                'category_id' => $validated['category_id'],
-                'is_south_african' => $validated['is_south_african'] ?? null,
-                'title' => $validated['title'],
-                'subtitle' => $validated['subtitle'] ?? null,
-                'order_type' => $validated['order_type'] ?? 'null',
-                'type' => $validated['type'] ?? null,
-                'price' => $validated['price'] ?? null,
-                'description' => $validated['description'] ?? null,
-                'image' => $imageName ? 'images/service/' . $imageName : null,
-                'short_description' => $validated['short_description'] ?? null,
+                'category_id' => $request->category_id,
+                'is_south_african' => $request->is_south_african == 'yes' ? 1 : 0,
+                'title' => $request->title,
+                'subtitle' => $request->subtitle,
+                'order_type' => $request->order_type,
+                'type' => $request->type,
+                'price' => $request->price,
+                'description' => $request->description,
+                'image' => $imageName,
+                'short_description' => $request->short_description,
             ]);
 
             // Create how it works entries
-            if (!empty($validated['how_it_works'])) {
-                foreach ($validated['how_it_works'] as $title) {
+            if (!empty($request->how_it_works)) {
+                foreach ($request->how_it_works as $title) {
                     if (!empty($title)) {
                         $service->howItWorks()->create(['title' => $title]);
                     }
@@ -77,6 +89,29 @@ class ServiceController extends Controller
         }
     }
 
+    public function inactiveService(Request $request,$category_id){
+        try {
+            $service = Service::find($category_id);
+            if ($service->status == 'yes') {
+                $service->status = 'no';
+            }else{
+                $service->status = 'yes';
+            }
+            $service->save();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Service status successfully!',
+                'data' => $service,
+            ]);
+        }catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to update service.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
     /**
      * 1.5 Update Base Service (without relations)
      */
@@ -866,9 +901,12 @@ class ServiceController extends Controller
         $query = Service::query();
         if ($request->filled('is_south_african')) {
             $query->where(function($q) use ($request) {
-                if ($request->is_south_african === 'null') {
+                if ($request->is_south_african === 'others') {
                     $q->whereNull('is_south_african');
-                } else {
+                } elseif ($request->is_south_african === 'all'){
+                    $q->get();
+                }
+                else {
                     $q->where('is_south_african', $request->boolean('is_south_african'));
                 }
             });
@@ -902,6 +940,7 @@ class ServiceController extends Controller
 
         $services = $query->with([
             'includedServices',
+//            'service',
             'processingTimes',
             'questionaries',
             'requiredDocuments',

@@ -68,7 +68,7 @@ class CheckoutController extends Controller
         $request->validate([
             'amount' => 'required',
             'payment_intent_id' => 'nullable|string',
-            'is_south_africa' => 'nullable|boolean',
+            'is_south_africa' => 'nullable|string',
             'delivery_id' => 'required|exists:deliveries,id',
 
 //            'items' => 'required|array|min:1',
@@ -81,7 +81,7 @@ class CheckoutController extends Controller
 
             'required_docs' => 'nullable|array',
             'required_docs.*' => 'nullable|array',
-            'required_docs.*.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'required_docs.*.*' => 'nullable|image|mimes:jpg,jpeg,png,webp',
         ]);
 
 
@@ -95,7 +95,7 @@ class CheckoutController extends Controller
                     'orderid' => Order::generateOrderId(),
                     'slug' => 'order-' . Order::generateOrderId(),
                     'total_amount' => $request->amount,
-                    'is_south_africa' => $request->is_south_africa,
+                    'is_south_africa' => $request->is_south_africa === 'yes' ? 1 : 0,
                     'delivery_id' => $request->delivery_id,
                     'stripe_payment_id' => $paymentIntent->id,
                     'status' => 'pending',

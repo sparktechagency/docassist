@@ -13,7 +13,14 @@ return new class extends Migration
     {
         Schema::table('answers', function (Blueprint $table) {
             // Make questionary_id nullable since answers can be for required documents too
-            $table->foreignId('questionary_id')->nullable()->change();
+//            $table->foreignId('questionary_id')->nullable()->change();
+
+//            $table->unsignedBigInteger('questionary_id')->nullable();
+//            $table->foreign('questionary_id')->on('questionaries')->references('id')->onDelete('cascade');
+            $table->foreign('questionary_id', 'fk_answers_questionary')
+                ->references('id')
+                ->on('questionaries')
+                ->onDelete('cascade');
         });
     }
 

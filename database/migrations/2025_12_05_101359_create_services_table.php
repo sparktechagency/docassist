@@ -13,11 +13,13 @@ return new class extends Migration
     {
         Schema::create('services', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
+            $table->unsignedBigInteger('category_id')->nullable();
+            $table->foreign('category_id')->on('categories')->references('id')->onDelete('cascade');
             $table->string('title');
             $table->enum('order_type', ['quote','checkout','null'])->default('null')->nullable();
             $table->integer('price')->unsigned()->nullable();
             $table->text('description')->nullable();
+            $table->enum('status', ['yes','no'])->default('yes')->nullable();
             $table->timestamps();
         });
     }

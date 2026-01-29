@@ -15,13 +15,27 @@ return new class extends Migration
             Schema::create('answers', function (Blueprint $table) {
                 $table->id();
                 // 1. Who answered?
-                $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-                $table->foreignId('order_id')->nullable()->constrained()->cascadeOnDelete();
-                $table->foreignId('order_item_id')->nullable()->constrained('order_items')->cascadeOnDelete();
-                $table->foreignId('cart_id')->nullable()->constrained()->cascadeOnDelete();
-                $table->foreignId('cart_item_id')->nullable()->constrained('cart_items')->cascadeOnDelete();
-                $table->foreignId('service_quote_id')->nullable()->constrained('service_quotes')->cascadeOnDelete();
-                $table->foreignId('questionary_id')->constrained('questionaries')->cascadeOnDelete();
+                $table->unsignedBigInteger('user_id')->nullable();
+                $table->foreign('user_id')->on('users')->references('id')->onDelete('cascade');
+                $table->unsignedBigInteger('order_id')->nullable();
+                $table->foreign('order_id')->on('orders')->references('id')->onDelete('cascade');
+                $table->unsignedBigInteger('order_item_id')->nullable();
+                $table->foreign('order_item_id')->on('order_items')->references('id')->onDelete('cascade');
+                $table->unsignedBigInteger('cart_id')->nullable();
+                $table->foreign('cart_id')->on('carts')->references('id')->onDelete('cascade');
+                $table->unsignedBigInteger('cart_item_id')->nullable();
+                $table->foreign('cart_item_id')->on('cart_items')->references('id')->onDelete('cascade');
+                $table->unsignedBigInteger('service_quote_id')->nullable();
+                $table->foreign('service_quote_id')->on('service_quotes')->references('id')->onDelete('cascade');
+                $table->unsignedBigInteger('questionary_id')->nullable();
+                $table->foreign('questionary_id')->on('questionary')->references('id')->onDelete('cascade');
+//                $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+//                $table->foreignId('order_id')->nullable()->constrained()->cascadeOnDelete();
+//                $table->foreignId('order_item_id')->nullable()->constrained('order_items')->cascadeOnDelete();
+//                $table->foreignId('cart_id')->nullable()->constrained()->cascadeOnDelete();
+//                $table->foreignId('cart_item_id')->nullable()->constrained('cart_items')->cascadeOnDelete();
+//                $table->foreignId('service_quote_id')->nullable()->constrained('service_quotes')->cascadeOnDelete();
+//                $table->foreignId('questionary_id')->constrained('questionaries')->cascadeOnDelete();
                 $table->text('value')->nullable();
                 $table->timestamps();
             });

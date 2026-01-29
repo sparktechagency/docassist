@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('custom_quotes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('quote_id')->constrained('quotes')->cascadeOnDelete();
+            $table->unsignedBigInteger('quote_id')->nullable();
+            $table->foreign('quote_id')->on('quotes')->references('id')->onDelete('cascade');
+//            $table->foreignId('quote_id')->constrained('quotes')->cascadeOnDelete();
             $table->string('name');
             $table->string('email')->nullable();
             $table->string('contact_number')->nullable();

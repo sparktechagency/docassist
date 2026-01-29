@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::table('answers', function (Blueprint $table) {
             // Add docs_id to store the required document ID
-            $table->foreignId('docs_id')->nullable()->after('questionary_id')->constrained('required_documents')->cascadeOnDelete();
+            $table->unsignedBigInteger('docs_id')->nullable();
+            $table->foreign('docs_id')->on('required_documents')->references('id')->onDelete('cascade');
+//            $table->foreignId('docs_id')->nullable()->after('questionary_id')->constrained('required_documents')->cascadeOnDelete();
         });
     }
 

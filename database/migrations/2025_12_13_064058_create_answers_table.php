@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::create('answers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('service_quote_id')->nullable()->constrained('service_quotes')->cascadeOnDelete();
-            $table->json('delivery_details_ids')->nullable(); 
+            $table->unsignedBigInteger('service_quote_id')->nullable();
+            $table->foreign('service_quote_id')->on('service_quotes')->references('id')->onDelete('cascade');
+//            $table->foreignId('service_quote_id')->nullable()->constrained('service_quotes')->cascadeOnDelete();
+            $table->json('delivery_details_ids')->nullable();
             $table->boolean('south_african')->default(false);
             $table->integer('age')->nullable();
             $table->text('about_yourself')->nullable();

@@ -15,21 +15,29 @@ return new class extends Migration
         Schema::table('answers', function (Blueprint $table) {
             // Add user_id if missing
             if (! Schema::hasColumn('answers', 'user_id')) {
-                $table->foreignId('user_id')->nullable()->after('id')->constrained('users')->cascadeOnDelete();
+                $table->unsignedBigInteger('user_id')->nullable();
+                $table->foreign('user_id')->on('users')->references('id')->onDelete('cascade');
+//                $table->foreignId('user_id')->nullable()->after('id')->constrained('users')->cascadeOnDelete();
             }
 
             // Ensure order_id exists before adding order_item_id
             if (! Schema::hasColumn('answers', 'order_id')) {
                 // place near the top if missing so dependent columns can reference it
-                $table->foreignId('order_id')->nullable()->after('user_id')->constrained('orders')->cascadeOnDelete();
+                $table->unsignedBigInteger('order_id')->nullable();
+                $table->foreign('order_id')->on('orders')->references('id')->onDelete('cascade');
+//                $table->foreignId('order_id')->nullable()->after('user_id')->constrained('orders')->cascadeOnDelete();
             }
 
             // Add order_item_id if missing. If order_id is still missing for any reason, avoid the 'after' clause.
             if (! Schema::hasColumn('answers', 'order_item_id')) {
                 if (Schema::hasColumn('answers', 'order_id')) {
-                    $table->foreignId('order_item_id')->nullable()->after('order_id')->constrained('order_items')->cascadeOnDelete();
+                    $table->unsignedBigInteger('order_item_id')->nullable();
+                    $table->foreign('order_item_id')->on('order_items')->references('id')->onDelete('cascade');
+//                    $table->foreignId('order_item_id')->nullable()->after('order_id')->constrained('order_items')->cascadeOnDelete();
                 } else {
-                    $table->foreignId('order_item_id')->nullable()->after('user_id')->constrained('order_items')->cascadeOnDelete();
+                    $table->unsignedBigInteger('order_item_id')->nullable();
+                    $table->foreign('order_item_id')->on('order_items')->references('id')->onDelete('cascade');
+//                    $table->foreignId('order_item_id')->nullable()->after('user_id')->constrained('order_items')->cascadeOnDelete();
                 }
             }
         });

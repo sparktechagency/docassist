@@ -17,11 +17,13 @@ return new class extends Migration
             }
 
             if (! Schema::hasColumn('cart_items', 'delivery_id')) {
-                $table->foreignId('delivery_id')
-                    ->nullable()
-                    ->after('quantity')
-                    ->constrained('deliveries')
-                    ->nullOnDelete();
+                $table->unsignedBigInteger('delivery_id')->nullable();
+                $table->foreign('delivery_id')->on('deliveries')->references('id')->onDelete('cascade');
+//                $table->foreignId('delivery_id')
+//                    ->nullable()
+//                    ->after('quantity')
+//                    ->constrained('deliveries')
+//                    ->nullOnDelete();
             }
         });
     }

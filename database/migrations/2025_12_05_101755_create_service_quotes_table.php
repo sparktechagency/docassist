@@ -13,8 +13,12 @@ return new class extends Migration
     {
         Schema::create('service_quotes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('quote_id')->constrained('quotes')->cascadeOnDelete();
-            $table->foreignId('service_id')->constrained('services')->cascadeOnDelete();
+            $table->unsignedBigInteger('service_id')->nullable();
+            $table->foreign('service_id')->on('services')->references('id')->onDelete('cascade');
+            $table->unsignedBigInteger('quote_id')->nullable();
+            $table->foreign('quote_id')->on('quotes')->references('id')->onDelete('cascade');
+//            $table->foreignId('quote_id')->constrained('quotes')->cascadeOnDelete();
+//            $table->foreignId('service_id')->constrained('services')->cascadeOnDelete();
             $table->timestamps();
         });
     }

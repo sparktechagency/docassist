@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('included_services', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('service_id')->constrained('services')->cascadeOnDelete();
+            $table->unsignedBigInteger('service_id')->nullable();
+            $table->foreign('service_id')->on('services')->references('id')->onDelete('cascade');
+//            $table->foreignId('service_id')->constrained('services')->cascadeOnDelete();
             $table->string('service_type')->nullable();
             $table->text('included_details')->nullable();
             $table->integer('price')->nullable();

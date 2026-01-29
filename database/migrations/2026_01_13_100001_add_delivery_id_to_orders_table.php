@@ -14,11 +14,13 @@ return new class extends Migration
         Schema::table('orders', function (Blueprint $table) {
             // Add delivery_id column if it doesn't exist
             if (!Schema::hasColumn('orders', 'delivery_id')) {
-                $table->foreignId('delivery_id')
-                    ->nullable()
-                    ->after('total_amount')
-                    ->constrained('deliveries')
-                    ->onDelete('set null');
+                $table->unsignedBigInteger('delivery_id')->nullable();
+                $table->foreign('delivery_id')->on('deliveries')->references('id')->onDelete('cascade');
+//                $table->foreignId('delivery_id')
+//                    ->nullable()
+//                    ->after('total_amount')
+//                    ->constrained('deliveries')
+//                    ->onDelete('set null');
             }
         });
     }

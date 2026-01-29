@@ -15,14 +15,19 @@ return new class extends Migration
         if (! Schema::hasTable('cart_items')) {
             Schema::create('cart_items', function (Blueprint $table) {
                 $table->id();
-                // Add cart_id without FK if carts table is missing
+//                // Add cart_id without FK if carts table is missing
                 if (Schema::hasTable('carts')) {
                     $table->foreignId('cart_id')->constrained()->cascadeOnDelete();
                 } else {
                     $table->unsignedBigInteger('cart_id');
                 }
 
-                $table->foreignId('service_id')->constrained();
+//                $table->unsignedBigInteger('cart_id')->nullable();
+//                $table->foreign('cart_id')->on('carts')->references('id')->onDelete('cascade');
+
+                $table->unsignedBigInteger('service_id')->nullable();
+                $table->foreign('service_id')->on('services')->references('id')->onDelete('cascade');
+//                $table->foreignId('service_id')->constrained();
                 $table->integer('quantity')->nullable();
                 $table->json('delivery_details_ids')->nullable();
                 $table->timestamps();

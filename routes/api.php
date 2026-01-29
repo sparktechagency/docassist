@@ -51,7 +51,7 @@ Route::group(['controller' => PagesController::class], function () {
 
 
 Route::group(['controller' => CategoryController::class], function () {
-    Route::get('list/categories', 'listCategories');
+    Route::get('public/categories', 'publicCategories');
 });
 
 //google authentication
@@ -67,11 +67,15 @@ Route::get('/rating/list', [RatingController::class, 'reviewList']);
 // Route::post('stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
+
+    Route::group(['controller' => CategoryController::class], function () {
+        Route::get('list/categories', 'listCategories');
+    });
     Route::post('/logout', [authController::class, 'logout']);
 
     // Rating routes
     Route::post('/rating', [RatingController::class, 'store']);
-   
+
 
     Route::group(['controller' => ProfileController::class], function () {
         // updating profile
@@ -103,7 +107,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     // cart module
     Route::get('/cart', [CartController::class, 'index']);
     Route::post('/cart/add', [CartController::class, 'addToCart']);
-    
+
     // Note: We use the CartItem ID here (e.g., /cart/update/5)
     Route::put('/cart/update/{itemId}', [CartController::class, 'updateItem']);
     Route::delete('/cart/remove/{itemId}', [CartController::class, 'removeItem']);
@@ -135,7 +139,7 @@ Route::group(['middleware' => ['auth:sanctum', 'admin'], 'prefix' => 'admin'], f
         Route::post('create/service', 'createService'); // to be deprecated
         Route::put('update/service/{service}', 'updateService'); // to be deprecated
         Route::delete('delete/service/{service}', 'deleteService');
-
+        Route::post('update/service/status/{service}', 'inactiveService');
         // New granular endpoints for CREATE
         Route::post('service/create-base', 'createBaseService');
         Route::post('service/{service}/add-included-services', 'addIncludedServices');
@@ -166,7 +170,7 @@ Route::group(['middleware' => ['auth:sanctum', 'admin'], 'prefix' => 'admin'], f
         Route::post('/pages/save', 'savePage');
         // Manage FAQs
         Route::post('/faqs', 'store');
-        Route::put('/faqs/{id}', 'update');     
+        Route::put('/faqs/{id}', 'update');
         Route::delete('/faqs/{id}', 'destroy');
 
     });

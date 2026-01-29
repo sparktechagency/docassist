@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('questionaries', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('service_id')->constrained('services')->cascadeOnDelete();
+            $table->unsignedBigInteger('service_id')->nullable();
+            $table->foreign('service_id')->on('services')->references('id')->onDelete('cascade');
+//            $table->foreignId('service_id')->constrained('services')->cascadeOnDelete();
             $table->string('name');
             $table->enum('type', ['textbox','inputfield','dropdown', 'checkbox'])->default('textbox',);
             $table->json('options')->nullable(); // for dropdown

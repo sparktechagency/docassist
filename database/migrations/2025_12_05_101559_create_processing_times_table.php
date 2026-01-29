@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('processing_times', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('service_id')->nullable()->constrained('services')->cascadeOnDelete();
+            $table->unsignedBigInteger('service_id')->nullable();
+            $table->foreign('service_id')->on('services')->references('id')->onDelete('cascade');
+//            $table->foreignId('service_id')->nullable()->constrained('services')->cascadeOnDelete();
             $table->text('details')->nullable();
             $table->string('time')->nullable();
             $table->timestamps();

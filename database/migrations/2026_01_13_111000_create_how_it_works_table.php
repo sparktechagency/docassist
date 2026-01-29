@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('how_it_works', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('service_id')->constrained('services')->onDelete('cascade');
+            $table->unsignedBigInteger('service_id')->nullable();
+            $table->foreign('service_id')->on('services')->references('id')->onDelete('cascade');
+//            $table->foreignId('service_id')->constrained('services')->onDelete('cascade');
             $table->string('title');
             $table->timestamps();
         });

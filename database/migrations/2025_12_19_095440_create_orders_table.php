@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained();
-            $table->string('stripe_payment_id')->nullable(); 
-            $table->decimal('total_amount', 12, 2); 
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->foreign('user_id')->on('users')->references('id')->onDelete('cascade');
+//            $table->foreignId('user_id')->constrained();
+            $table->string('stripe_payment_id')->nullable();
+            $table->decimal('total_amount', 12, 2);
             $table->string('status')->default('pending'); // pending, paid, failed
             $table->boolean('is_south_africa')->default(false); // The new flag
             $table->timestamps();

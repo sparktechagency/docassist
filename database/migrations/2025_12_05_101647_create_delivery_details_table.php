@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('delivery_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('service_id')->constrained('services')->cascadeOnDelete();
+            $table->unsignedBigInteger('service_id')->nullable();
+            $table->foreign('service_id')->on('services')->references('id')->onDelete('cascade');
+//            $table->foreignId('service_id')->constrained('services')->cascadeOnDelete();
             $table->string('delivery_type');
             $table->text('details');
             $table->integer('price');

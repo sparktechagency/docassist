@@ -34,6 +34,7 @@ class QuoteController extends Controller
                 $quote = Quote::create([
                     'user_id' => $request->user()->id,
                     'type' => 'custom',
+                    'quote_id' => Quote::generateQuote_id(),
                 ]);
 
                 // B. Create Custom Quote Details
@@ -153,6 +154,7 @@ class QuoteController extends Controller
                 $quote = Quote::create([
                     'user_id' => Auth::user()->id,
                     'type' => 'service',
+                    'quote_id' => Quote::generateQuote_id(),
                     'delivery_id' => $request->delivery_id,
                 ]);
 
@@ -616,11 +618,17 @@ class QuoteController extends Controller
     {
         $request->validate([
             'filter' => 'nullable|in:New,Mailed',
+            'search' => 'nullable|string',
         ]);
         $filter = $request->query('filter');
+        $quote = $request->query('search');
         try {
             $perPage = request()->query('per_page', 10);
-            $quotes = CustomQuote::with(['quote.user'])->when($filter, function ($query, $filter) {
+            $quotes = CustomQuote::with(['quote.user:id,name,email,profile_pic'])
+                ->whereHas('quote', function ($q) use ($quote) {
+                    $q->where('quote_id', 'LIKE', "%{$quote}%");
+                })
+                ->when($filter, function ($query, $filter) {
                 $query->where('status', $filter);
             })->latest('id')->paginate($perPage);
 
@@ -639,17 +647,20 @@ class QuoteController extends Controller
         }
     }
 
-    public function ServiceQuoteList(Request $request)
+    public function serviceQuoteList(Request $request)
     {
-                $request->validate([
+        $request->validate([
             'filter' => 'nullable|in:New,Mailed',
+            'search' => 'nullable|string',
         ]);
         $filter = $request->query('filter');
+        $quote_id = $request->query('search');
 
         try {
             $perPage = request()->query('per_page', 10);
-            $quotes = Quote::with(['user', 'serviceQuote', 'serviceQuote.service', 'serviceQuote.service.category'])->
-            latest('id')->when($filter, function ($query, $filter) {
+            $quotes = Quote::with(['user:id,name,email,profile_pic', 'serviceQuote', 'serviceQuote.service', 'serviceQuote.service.category'])
+                ->where('quote_id','LIKE','%'.$quote_id.'%')->where('type','service')
+                ->latest('id')->when($filter, function ($query, $filter) {
                 $query->where('status', $filter);
             })->paginate($perPage);
 

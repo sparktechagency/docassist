@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('quotes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->foreign('user_id')->on('users')->references('id')->onDelete('cascade');
+//            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('type');
             $table->timestamps();
         });

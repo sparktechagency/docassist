@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::table('quotes', function (Blueprint $table) {
             if (!Schema::hasColumn('quotes', 'delivery_id')) {
-                $table->foreignId('delivery_id')->nullable()->constrained('deliveries')->onDelete('set null');
+                $table->unsignedBigInteger('delivery_id')->nullable();
+                $table->foreign('delivery_id')->on('deliveries')->references('id')->onDelete('cascade');
+//                $table->foreignId('delivery_id')->nullable()->constrained('deliveries')->onDelete('set null');
             }
         });
     }
