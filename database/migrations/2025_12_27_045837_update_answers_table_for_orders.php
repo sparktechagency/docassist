@@ -17,8 +17,8 @@ return new class extends Migration
 
             // 2. Make service_quote_id Nullable (because Order answers won't have it)
 //            $table->foreignId('service_quote_id')->nullable()->change();
-//            $table->unsignedBigInteger('service_quote_id')->nullable();
-            $table->foreign('service_quote_id')->on('service_quotes')->references('id')->onDelete('cascade');
+//            $table->unsignedBigInteger('service_quote_id')->nullable()->change();
+//            $table->foreign('service_quote_id')->on('service_quotes')->references('id')->onDelete('cascade');
         });
 
     }
