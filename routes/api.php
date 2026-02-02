@@ -3,10 +3,14 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\{AdminDashboardController, CartController, CategoryController, CheckoutController, DeliveryController, HomeController, MessageController, NewsController, NotificationController, OrderController, PagesController, ProfileController, QuoteController, RatingController, ServiceController, SocialAuthController, StripeWebhookController, SubscriberController, authController};
+use App\Http\Controllers\PeachPayment;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+Route::post('peach-payment', [PeachPayment::class, 'initiatePayment']);
+Route::get('peach/return',[PeachPayment::class, 'returnUrl'])->name('returnUrl');
 
 Route::group(['controller' => authController::class], function () {
     Route::post('/register', 'userRegister');
