@@ -12,7 +12,24 @@ class PeachPayment extends Controller
 
     public function __construct()
     {
-        $this->baseSandBoxUrl = 'https://testsecure.peachpayments.com/v2/checkout';
+        $this->baseSandBoxUrl = 'https://testsecure.peachpayments.com';
+    }
+
+    public function getAccessToken()
+    {
+        try {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post('https://sandbox-dashboard.peachpayments.com/api/oauth/token', [
+                "clientId"=>env('PEACH_CLIENT_ID'),
+                "clientSecret"=>env('PEACH_CLIENT_SECRET'),
+                "merchantId"=>env('PEACH_MERCHANT_ID'),
+            ]);
+
+            return $response->json();
+        }catch (\Exception $exception){
+            return $exception->getMessage();
+        }
     }
     public function initiatePayment(Request $request)
     {
@@ -20,8 +37,10 @@ class PeachPayment extends Controller
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-//                'Authorization' => env('PEACH_CLIENT_SECRET'),
-            ])->post($this->baseSandBoxUrl, [
+                'Authorization' => 'Bearer '.$this->getAccessToken()['access_token'],
+//                'Origin' => env('APP_URL'),
+                'Referer' => env('APP_URL')
+            ])->post($this->baseSandBoxUrl.'/v2/checkout', [
                 'authentication.entityId'=>env('PEACH_ENTITY_ID'),
                 'merchantTransactionId'=>env('PEACH_MERCHANT_ID'),
                 'amount'=>100,
