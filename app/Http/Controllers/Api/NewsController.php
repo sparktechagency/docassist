@@ -15,7 +15,7 @@ class NewsController extends Controller
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'nullable|image|max:10240',
+            'image' => 'nullable|image',
         ]);
 
         // ensure images directory exists

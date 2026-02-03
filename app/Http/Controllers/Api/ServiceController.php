@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{DB, File, Validator};
+use Illuminate\Support\Facades\{DB, File, Log, Validator};
 use App\Models\Service;
 use App\Http\Controllers\Controller;
 
@@ -24,9 +24,11 @@ class ServiceController extends Controller
             'price' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
             'short_description' => 'nullable|string|max:500',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp',
             'how_it_works' => 'nullable|array',
             'how_it_works.*' => 'nullable|string|max:255',
+        ],[
+            'is_south_african.in'=>'Hello Almas Vai! This is not correct value'
         ]);
 
 
@@ -900,16 +902,18 @@ class ServiceController extends Controller
     {
         $query = Service::query();
         if ($request->filled('is_south_african')) {
-            $query->where(function($q) use ($request) {
-                if ($request->is_south_african === 'others') {
-                    $q->whereNull('is_south_african');
-                } elseif ($request->is_south_african === 'all'){
-                    $q->get();
-                }
-                else {
-                    $q->where('is_south_african', $request->boolean('is_south_african'));
-                }
-            });
+            $value = $request->input('is_south_african');
+//            Log::info($value);
+            if ($value === 'yes') {
+                $query->where('is_south_african', 1);
+            } elseif ($value === 'no') {
+                $query->where('is_south_african', 0);
+            }else{
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid value',
+                ],422);
+            }
         }
 
 
@@ -985,6 +989,7 @@ class ServiceController extends Controller
             'status' => true,
             'message' => 'Service details retrieved successfully!',
             'data' => $service,
+            'category_name' => $service->category->name,
             // 'total_price' => $total_price,
         ], 200);
     }

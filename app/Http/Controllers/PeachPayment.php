@@ -20,6 +20,7 @@ class PeachPayment extends Controller
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
+//                'Authorization' => env('PEACH_CLIENT_SECRET'),
             ])->post($this->baseSandBoxUrl, [
                 'authentication.entityId'=>env('PEACH_ENTITY_ID'),
                 'merchantTransactionId'=>env('PEACH_MERCHANT_ID'),
@@ -29,7 +30,7 @@ class PeachPayment extends Controller
                 'shopperResultUrl'=>route('returnUrl'),
             ]);
 
-            return $response->json();
+            return $response;
         }catch (\Exception $exception){
             return $exception->getMessage();
         }

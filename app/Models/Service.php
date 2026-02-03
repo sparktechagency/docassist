@@ -17,6 +17,7 @@ class Service extends Model
         'description',
         'short_description',
         'image',
+        'status',
     ];
 
     public function getImageAttribute($value)

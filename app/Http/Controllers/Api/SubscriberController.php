@@ -13,8 +13,13 @@ class SubscriberController extends Controller
      */
     public function index(Request $request)
     {
+        $data = $request->validate([
+            'search' => 'nullable|string',
+        ]);
         $perPage = $request->query('per_page', 10);
-        $subscribers = Subscriber::latest('id')->paginate($perPage);
+        $subscribers = Subscriber::latest('id')
+            ->where('email','LIKE', '%' . $request->query('search') . '%')
+            ->paginate($perPage);
         return response()->json([
             'success' => true,
             'data' => $subscribers,

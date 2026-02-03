@@ -169,7 +169,7 @@ class AdminDashboardController extends Controller
         $search = $request->query('search', '');
 
         $query = User::where('role', 'user')
-            ->select('id', 'name', 'email', 'profile_pic', 'ban_type', 'banned_until', 'ban_reason');
+            ->select('id', 'name', 'email', 'profile_pic', 'ban_type', 'banned_until', 'ban_reason','created_at');
 
         if ($search) {
             $query->where('name', 'LIKE', '%' . $search . '%')
@@ -187,6 +187,7 @@ class AdminDashboardController extends Controller
                 'banned_until' => $user->banned_until ? Carbon::parse($user->banned_until)->format('jS F Y') : null,
                 'ban_reason' => $user->ban_reason,
                 'profile_pic' => $user->profile_pic ? url($user->profile_pic) : url('images/default/user.png'),
+                'created_at' => $user->created_at,
             ];
         });
 

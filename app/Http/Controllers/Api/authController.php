@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{Auth, Hash, Validator};
+use Illuminate\Support\Facades\{Auth, Hash, Http, Validator};
 use App\Models\User;
 use App\Http\Controllers\Controller;
 use App\Services\EmailVerificationService;
@@ -405,13 +405,32 @@ class authController extends Controller
 
             $user = User::where('google_id',$googleUser->getId())->where('email',$googleUser->getEmail())->first();
 
+            $googleImg = $googleUser->avatar;
+
+            $response = Http::get($googleImg);
+
+//            dd($response);
+//            if ($response->ok()){
+//                $fileName = 'google_avatar_' . Str::random(6) . '.jpg';
+//
+//                // Save to temporary file
+//                $tmpFilePath = sys_get_temp_dir() . '/' . $fileName;
+//                file_put_contents($tmpFilePath, $response->body());
+//
+//                // Use your existing uploadFile method
+//                // Assuming it accepts (file path, folder)
+//                $path = $this->uploadFile($fileName, 'images/profile');
+//
+//                // Delete temp file
+//                unlink($tmpFilePath);
+//            }
             if(!$user){
                 $user = User::updateOrCreate(
                     ['email'=> $googleUser->email ],
                 [
                     'name'=>$googleUser->name,
                     'google_id' => $googleUser->id,
-                    'profile_pic'=>$googleUser->avatar,
+                    'profile_pic'=>$googleImg,
                     'password'=>Hash::make('12345678')
                 ]);
             }
@@ -422,12 +441,12 @@ class authController extends Controller
                     'message' => 'This email is already linked with another Google account'
                 ], 403);
             }
-
-            Auth::login($user);
+            $token = $user->createToken('google-auth')->plainTextToken;
 
             return response()->json([
                 'status'=> true,
                 'message'=>'Login Successfull',
+                'token' =>$token,
                 'data'=>$user,
             ],200);
         }catch(Exception $e){

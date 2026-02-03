@@ -81,8 +81,7 @@ class OrderController extends Controller
     public function adminOrders(Request $request)
     {
         try {
-            // 1. Start with the Base Query and Eager Load EVERYTHING
-            // We include 'answer' because that contains the user's specific inputs (Age, Docs)
+
             $query = Order::with([
                 'user',
                 'answer',
@@ -97,21 +96,26 @@ class OrderController extends Controller
                 'delivery'
             ]);
 
-            // 2. SEARCH Logic (Search by orderid)
+
             if ($request->has('search') && !empty($request->search)) {
                 $searchTerm = $request->search;
-                // Using 'like' allows for partial matches (e.g. searching "839" finds "839201")
-                $query->where('orderid', 'like', "%{$searchTerm}%");
+
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('orderid', 'like', "%{$searchTerm}%")
+                        ->orWhereHas('user', function ($u) use ($searchTerm) {
+                            $u->where('name', 'like', "%{$searchTerm}%")
+                                ->orWhere('email', 'like', "%{$searchTerm}%");
+                        });
+                });
             }
 
-            // 3. STATUS Logic (The "Switch")
+
             if ($request->has('status')) {
                 if ($request->status === 'completed') {
-                    // Strict check for completed
+
                     $query->where('status', 'completed');
                 } elseif ($request->status === 'pending') {
-                    // "Pending" view includes both 'pending' (unpaid) and 'paid' (processing)
-                    // basically anything that is NOT completed
+
                     $query->whereIn('status', ['pending', 'paid']);
                 }
             }

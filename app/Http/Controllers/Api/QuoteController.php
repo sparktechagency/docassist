@@ -627,10 +627,31 @@ class QuoteController extends Controller
             $quotes = CustomQuote::with(['quote.user:id,name,email,profile_pic'])
                 ->whereHas('quote', function ($q) use ($quote) {
                     $q->where('quote_id', 'LIKE', "%{$quote}%");
-                })
+                })->orWhere('name', 'LIKE', "%{$quote}%")
+                ->orWhere('email', 'LIKE', "%{$quote}%")
                 ->when($filter, function ($query, $filter) {
                 $query->where('status', $filter);
-            })->latest('id')->paginate($perPage);
+            })
+                ->latest()->paginate($perPage);
+
+//            $quotes = CustomQuote::with(['quote.user:id,name,email,profile_pic'])
+//                ->when($quote, function ($query, $quote) {
+//                    $query->where(function ($q) use ($quote) {
+//                        $q->whereHas('quote', function ($q2) use ($quote) {
+//                            $q2->where('quote_id', 'LIKE', "%{$quote}%");
+//                        })
+//                            ->orWhereHas('quote.user', function ($q3) use ($quote) {
+//                                $q3->where('name', 'LIKE', "%{$quote}%")
+//                                    ->orWhere('email', 'LIKE', "%{$quote}%");
+//                            });
+//                    });
+//                })
+//                ->when($filter, function ($query, $filter) {
+//                    $query->where('status', $filter);
+//                })
+//                ->latest()
+//                ->paginate($perPage);
+
 
             return response()->json([
                 'status' => true,
@@ -659,10 +680,16 @@ class QuoteController extends Controller
         try {
             $perPage = request()->query('per_page', 10);
             $quotes = Quote::with(['user:id,name,email,profile_pic', 'serviceQuote', 'serviceQuote.service', 'serviceQuote.service.category'])
-                ->where('quote_id','LIKE','%'.$quote_id.'%')->where('type','service')
+                ->where('quote_id','LIKE','%'.$quote_id.'%')
                 ->latest('id')->when($filter, function ($query, $filter) {
                 $query->where('status', $filter);
-            })->paginate($perPage);
+            })->when($quote_id, function ($query, $quote_id) {
+                    $query->orWhereHas('user', function ($q) use ($quote_id) {
+                        $q->where('name', 'LIKE', '%' . $quote_id . '%')
+                            ->orWhere('email', 'LIKE', '%' . $quote_id . '%');
+                    });
+                })
+                ->where('type','service')->paginate($perPage);
 
             return response()->json([
                 'status' => true,

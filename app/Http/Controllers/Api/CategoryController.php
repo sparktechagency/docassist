@@ -153,6 +153,7 @@ class CategoryController extends Controller
             $query = Category::query()
             ->whereHas('activeServices')
                 ->withCount('services');
+//            dd($query->get());
         }
          // Search functionality
 
