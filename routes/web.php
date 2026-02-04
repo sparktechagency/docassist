@@ -9,3 +9,5 @@ Route::get('/', function () {
 
 Route::get('google/login',[authController::class, 'redirectGoogle']);
 Route::get('auth/google/callback',[authController::class, 'social_login']);
+
+//Route::post('peach/return',[\App\Http\Controllers\PeachPayment::class, 'returnUrl'])->name('returnUrl');

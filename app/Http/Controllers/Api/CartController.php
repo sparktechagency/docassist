@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\PeachPayment;
+use App\Services\PeachPaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, DB, Log};
 use App\Http\Controllers\Controller;
@@ -70,6 +72,14 @@ class CartController extends Controller
 
         $grandTotal = $formattedItems->sum('subtotal');
 
+
+//        dd($grandTotal);
+//        $payment = app(PeachPaymentService::class);
+//        $payment->initiatePayment(
+//            new Request(['grand_total'=>$grandTotal])
+//        );
+
+//        dd($payment);
         return response()->json([
             'status' => true,
             'message' => 'Cart retrieved successfully',
@@ -138,7 +148,7 @@ class CartController extends Controller
                 return response()->json([
                     'status' => true,
                     'message' => 'Item added to cart successfully',
-                    'data' => $cartItem, 
+                    'data' => $cartItem,
                 ], 201);
             });
 
@@ -146,7 +156,7 @@ class CartController extends Controller
             Log::error('Cart Add Error: '.$e->getMessage());
 
             return response()->json([
-                'status' => false, 
+                'status' => false,
                 'error' => 'Unable to add item to cart.' // Generic error for user, real one in logs
             ], 500);
         }
@@ -275,7 +285,7 @@ class CartController extends Controller
                 'cart_item_id' => $item->id,
                 'service_id' => $item->service_id,
                 'service_name' => $service->title,
-                
+
                 // The Questions
                 'questions' => $service->questionaries->map(function ($q) {
                     return [

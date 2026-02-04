@@ -9,8 +9,8 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::post('peach-payment', [PeachPayment::class, 'initiatePayment']);
-Route::get('peach/return',[PeachPayment::class, 'returnUrl'])->name('returnUrl');
+//Route::post('peach-payment', [PeachPayment::class, 'initiatePayment']);
+Route::match(['get','post'],'peach/return',[PeachPayment::class, 'returnUrl'])->name('returnUrl');
 
 Route::group(['controller' => authController::class], function () {
     Route::post('/register', 'userRegister');
@@ -74,6 +74,8 @@ Route::get('/rating/list', [RatingController::class, 'reviewList']);
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
 
+    Route::post('peach-payment', [PeachPayment::class, 'initiatePayment']);
+
     Route::group(['controller' => CategoryController::class], function () {
         Route::get('list/categories', 'listCategories');
     });
@@ -107,7 +109,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::post('/checkout/intent', 'paymentIntent');
 
         // Finish the process (Call this after Stripe frontend succeeds)
-        Route::post('/checkout/success', 'paymentSuccess');
+        Route::post('/checkout/success', 'paymentSuccess')->name('paymentSuccess');
     });
 
     // cart module

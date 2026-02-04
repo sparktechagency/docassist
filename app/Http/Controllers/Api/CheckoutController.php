@@ -61,45 +61,49 @@ class CheckoutController extends Controller
      * STEP 1: Initiate Checkout
      * Validates items, calculates total securely, creates pending order, returns Client Secret.
      */
-    public function paymentSuccess(Request $request)
+    public function paymentSuccess(Request $request,User $user, Order $order)
     {
 //        dd($request->all());
         // 1 Validate
-        $request->validate([
-            'amount' => 'required',
-            'payment_intent_id' => 'nullable|string',
-            'is_south_africa' => 'nullable|string',
-            'delivery_id' => 'required|exists:deliveries,id',
+//        $request->validate([
+//            'amount' => 'required',
+////            'payment_intent_id' => 'nullable|string',
+//            'is_south_africa' => 'nullable|string',
+//            'delivery_id' => 'required|exists:deliveries,id',
+//
+////            'items' => 'required|array|min:1',
+//            'service_id' => 'required|exists:services,id',
+//            'quantity' => 'required|integer|min:1',
+//
+//            'answers' => 'nullable|array',
+//            'answers.*.question_id' => 'nullable',
+//            'answers.*.value' => 'nullable',
+//
+//            'required_docs' => 'nullable|array',
+//            'required_docs.*' => 'nullable|array',
+//            'required_docs.*.*' => 'nullable|image|mimes:jpg,jpeg,png,webp',
+//        ]);
 
-//            'items' => 'required|array|min:1',
-            'service_id' => 'required|exists:services,id',
-            'quantity' => 'required|integer|min:1',
 
-            'answers' => 'nullable|array',
-            'answers.*.question_id' => 'nullable',
-            'answers.*.value' => 'nullable',
+        Log::info('This is log: ' . json_encode($request->all()));
+//        return $request->all();
+//        $user = User::find($request->query('user_id'));
+//        dd($user);
+//        $paymentIntent = PaymentIntent::retrieve($request->payment_intent_id);
 
-            'required_docs' => 'nullable|array',
-            'required_docs.*' => 'nullable|array',
-            'required_docs.*.*' => 'nullable|image|mimes:jpg,jpeg,png,webp',
-        ]);
-
-
-        $user = Auth::user();
-        $paymentIntent = PaymentIntent::retrieve($request->payment_intent_id);
 
         DB::beginTransaction();
-        try {
-                $order = Order::create([
-                    'user_id' => $user->id,
-                    'orderid' => Order::generateOrderId(),
-                    'slug' => 'order-' . Order::generateOrderId(),
-                    'total_amount' => $request->amount,
-                    'is_south_africa' => $request->is_south_africa === 'yes' ? 1 : 0,
-                    'delivery_id' => $request->delivery_id,
-                    'stripe_payment_id' => $paymentIntent->id,
-                    'status' => 'pending',
-                ]);
+//        try {
+//                $order = Order::create([
+//                    'user_id' => $user->id,
+//                    'orderid' => Order::generateOrderId(),
+//                    'slug' => 'order-' . Order::generateOrderId(),
+//                    'total_amount' => $request->amount,
+//                    'is_south_africa' => $request->is_south_africa === 'yes' ? 1 : 0,
+//                    'delivery_id' => $request->delivery_id,
+////                    'stripe_payment_id' => $paymentIntent->id,
+//                    'status' => 'pending',
+//                ]);
 
 //                $orderItemsByService = [];
 
@@ -174,13 +178,13 @@ class CheckoutController extends Controller
 //                }
 
 
-                Transaction::create([
-                    'user_id' => $user->id,
-                    'order_id' => $order->id,
-                    'payment_intent_id' => $paymentIntent->id,
-                    'amount' => $request->amount,
-                    'status' => 'initiated',
-                ]);
+//                Transaction::create([
+//                    'user_id' => $user->id,
+//                    'order_id' => $order->id,
+//                    'payment_intent_id' => $request->checkoutId,
+//                    'amount' => $request->amount,
+//                    'status' => 'initiated',
+//                ]);
 
                 $user = Auth::user();
                 Notification::send($user, new NewOrderPlaced($order));
@@ -192,23 +196,24 @@ class CheckoutController extends Controller
                 }
 
                 DB::commit();
-                return response()->json([
-                    'status' => true,
-                    'message' => 'Order placed successfully',
-                    'data' => [
-                        'order' => $order,
-                    ],
-                ], 201);
+//                return redirect(env('FRONTEND_URL').'/payment-success');
+//                return response()->json([
+//                    'status' => true,
+//                    'message' => 'Order placed successfully',
+//                    'data' => [
+//                        'order' => $order,
+//                    ],
+//                ], 201);
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Order Error: '.$e->getMessage());
-
-            return response()->json([
-                'status' => false,
-                'message' => 'Failed to place order',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+//        } catch (\Exception $e) {
+//            DB::rollBack();
+//            Log::error('Order Error: '.$e->getMessage());
+//
+//            return response()->json([
+//                'status' => false,
+//                'message' => 'Failed to place order',
+//                'error' => $e->getMessage(),
+//            ], 500);
+//        }
     }
 }
