@@ -39,7 +39,6 @@ trait UploadFile
 
         $fileName = Str::uuid()->toString() . '.webp';
 
-        // 🔑 Save processed image, NOT original file
         file_put_contents($fullFolderPath . '/' . $fileName, (string) $webp);
 //        dd($folder . $fileName);
         return $folder . $fileName;
