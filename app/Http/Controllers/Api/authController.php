@@ -4,14 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{Auth, Hash, Http, Validator};
+use Illuminate\Support\Facades\{Auth, Hash, Http, Storage, Validator};
 use App\Models\User;
 use App\Http\Controllers\Controller;
 use App\Services\EmailVerificationService;
 use App\Notifications\{EmailVerificationRequest, PasswordResetRequested};
 use Carbon\Carbon;
 use Exception;
+use Kreait\Firebase\Factory;
 use Laravel\Socialite\Socialite;
+use Google\Client;
 
 class authController extends Controller
 {
@@ -399,6 +401,55 @@ class authController extends Controller
         return Socialite::driver('google')->redirect();
     }
 
+
+    public function googleLogin(Request $request)
+    {
+        try{
+//            dd($request->id_token);
+            $client = new Factory();
+          $path =  $client->withServiceAccount(storage_path('app/kistenmunro.json'));
+//          dd($path);
+          $auth = $path->createAuth();
+            $payload = $auth->verifyIdToken($request->id_token);
+            $claim = $payload->claims();
+//            dd($claim);
+
+            $email = $claim->get('email');
+            $name = $claim->get('name');
+            $firebaseUid = $claim->get('sub');
+            $picture = $claim->get('picture');
+//            dd($picture);
+
+            $user = User::where('email', $email)->first();
+            if (!$user) {
+                $user = User::create([
+                    'name' => $name,
+                    'email' => $email,
+                    'profile_pic' => $picture,
+                    'password' => Hash::make(Str::random(16)),
+                    'google_id' => $firebaseUid,
+                    'email_verified_at' => now(),
+                ]);
+            }
+
+//            dd($user);
+            $token = $user->createToken('auth-token')->plainTextToken;
+            return response()->json([
+                'status' => true,
+                'message' => 'Successfully logged in',
+                'data' => [
+                    'token' => $token,
+                    'user' => $user,
+                ],
+            ]);
+        }catch (\Exception $e){
+            return response()->json([
+                'status'=>false,
+                'message'=>'Something went wrong',
+                'error'=>$e->getMessage()
+            ],500);
+        }
+    }
     public function social_login(Request $request){
         try{
             $googleUser = Socialite::driver('google')->user();
@@ -407,23 +458,7 @@ class authController extends Controller
 
             $googleImg = $googleUser->avatar;
 
-            $response = Http::get($googleImg);
-
-//            dd($response);
-//            if ($response->ok()){
-//                $fileName = 'google_avatar_' . Str::random(6) . '.jpg';
-//
-//                // Save to temporary file
-//                $tmpFilePath = sys_get_temp_dir() . '/' . $fileName;
-//                file_put_contents($tmpFilePath, $response->body());
-//
-//                // Use your existing uploadFile method
-//                // Assuming it accepts (file path, folder)
-//                $path = $this->uploadFile($fileName, 'images/profile');
-//
-//                // Delete temp file
-//                unlink($tmpFilePath);
-//            }
+//            $response = Http::get($googleImg);
             if(!$user){
                 $user = User::updateOrCreate(
                     ['email'=> $googleUser->email ],
@@ -441,11 +476,14 @@ class authController extends Controller
                     'message' => 'This email is already linked with another Google account'
                 ], 403);
             }
-            $token = $user->createToken('google-auth')->plainTextToken;
+            $token = $user->createToken('auth-token')->plainTextToken;
+            $redirectUrl = env('FRONTEND_URL');
+
+//            return redirect()->away($redirectUrl);
 
             return response()->json([
                 'status'=> true,
-                'message'=>'Login Successfull',
+                'message'=>'Login Successful',
                 'token' =>$token,
                 'data'=>$user,
             ],200);
@@ -457,4 +495,84 @@ class authController extends Controller
             ],500);
         }
     }
+
+//    public function socialLogin(Request $request)
+//    {
+//        try {
+//            $user_exists = User::where('email', $request->email)->first();
+//            if ($user_exists) {
+//                if (!$user_exists->is_active) {
+//                    return response()->json([
+//                        'status'=> false,
+//                        'message' => 'Your account has been blocked. Please contact support.',
+//                        'error' => 'Your account has been blocked. Please contact support.'
+//                    ],403);
+////                    return $this->responseError(null, 'Your account has been blocked. Please contact support.', 403);
+//                }
+//                $socialId = ($request->has('google_id') && $user_exists->google_id === $request->google_id);
+//                if ($socialId) {
+//                    $responseWithToken = $user_exists->createToken('auth-token')->plainTextToken;
+//                    return response()->json([
+//                        'status'=> true,
+//                        'message' => 'You have successfully logged in.',
+//                        'data' => $responseWithToken
+//                    ]);
+////                    return $this->responseSuccess($responseWithToken, 'You have successfully logged in.');
+//                } elseif (is_null($user_exists->google_id)) {
+//                    $meta_data = ['redirect_login' => true];
+//                    return response()->json([
+//                        'status'=> true,
+//                        'message' => 'An account with this email already exists. Please sign in instead.',
+//                        'data' => $meta_data
+//                    ],200);
+////                    return $this->responseSuccess(null, 'An account with this email already exists. Please sign in instead.', 200, 'success', $meta_data);
+//                } else {
+//                    $user_exists->update([
+//                        'google_id'   => $request->google_id ?? $user_exists->google_id,
+////                        'facebook_id' => $request->facebook_id ?? $user_exists->facebook_id,
+////                        'twitter_id'  => $request->twitter_id ?? $user_exists->twitter_id,
+////                        'apple_id'    => $request->apple_id ?? $user_exists->apple_id,
+//                    ]);
+//                    $responseWithToken = $user_exists->createToken('auth-token')->plainTextToken;
+//                    return response()->json([
+//                        'status'=> true,
+//                        'message' => 'You have successfully logged in.',
+//                        'data' => $responseWithToken
+//                    ],200);
+////                    return $this->responseSuccess($responseWithToken, 'You have successfully logged in.');
+//                }
+//            }
+//            $new_user                    = new User();
+//            $new_user->name              = $request->name;
+//            $new_user->email             = $request->email;
+//            $new_user->role              = $request->role ?? 'user';
+//            $new_user->password          = Hash::make(Str::random(16));
+//            $new_user->google_id         = $request->google_id ?? null;
+////            $new_user->facebook_id       = $request->facebook_id ?? null;
+////            $new_user->twitter_id        = $request->twitter_id ?? null;
+////            $new_user->apple_id          = $request->apple_id ?? null;
+//            $new_user->email_verified_at = now();
+////            $new_user->status            = 'active';
+//
+//            $new_user->profile_pic = $request->hasFile('photo');
+////                ? $this->fileuploadService->saveOptimizedImage($request->file('photo'), 40, 512, null, true)
+////                : $this->fileuploadService->generateUserAvatar($request->name);
+//
+//            $new_user->save();
+//            $responseWithToken = $new_user->createToken('auth-token')->plainTextToken;
+//            return response()->json([
+//                'status'=> true,
+//                'message' => 'You have successfully logged in.',
+//                'data' => $responseWithToken
+//            ],200);
+////            return $this->responseSuccess($responseWithToken, 'You have successfully logged in.');
+//        } catch (Exception $e) {
+//            return response()->json([
+//                'status'=> false,
+//                'message' => 'An error occurred while registering the user.',
+//                'data' => $e->getMessage()
+//            ],200);
+////            return $this->responseError($e->getMessage(), 'An error occurred while registering the user.');
+//        }
+//    }
 }

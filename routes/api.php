@@ -33,9 +33,11 @@ Route::group(['controller' => authController::class], function () {
     Route::post('/password/change', 'changePassword');
 });
 
-//Route::get('google/login',[authController::class, 'redirectGoogle']);
-//Route::get('auth/google/callback',[authController::class, 'social_login']);
-    // sending message from user
+
+    Route::post('google/login',[authController::class, 'googleLogin']);
+    //Route::get('auth/google/callback',[authController::class, 'social_login']);
+
+
     Route::post('/send/message', [MessageController::class, 'sendMessage']);
     Route::get('/testimonials', [HomeController::class, 'testimonials']);
     Route::get('/deliveries', [DeliveryController::class, 'list']);
